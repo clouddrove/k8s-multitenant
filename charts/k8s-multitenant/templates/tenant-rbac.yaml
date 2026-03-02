@@ -1,0 +1,40 @@
+{{- if and .Values.rbac.create (gt (len .Values.tenants) 0) }}
+{{- $defaultRules := .Values.rbac.defaultRules }}
+{{- $serviceAccountName := .Values.rbac.serviceAccountName }}
+{{- range .Values.tenants }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ $.Release.Name }}-tenant-role
+  namespace: {{ .name | quote }}
+  labels:
+    {{- include "multitenant.labels" $ | nindent 4 }}
+    multitenant.kubernetes.io/tenant: {{ .name | quote }}
+  {{- with .labels }}
+  {{- toYaml . | nindent 4 }}
+  {{- end }}
+rules:
+  {{- $defaultRules | toYaml | nindent 2 }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ $.Release.Name }}-tenant-rolebinding
+  namespace: {{ .name | quote }}
+  labels:
+    {{- include "multitenant.labels" $ | nindent 4 }}
+    multitenant.kubernetes.io/tenant: {{ .name | quote }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ $.Release.Name }}-tenant-role
+subjects:
+  - kind: ServiceAccount
+    name: {{ $serviceAccountName | quote }}
+    namespace: {{ .name | quote }}
+  {{- if and .rbac .rbac.subjects }}
+  {{- toYaml .rbac.subjects | nindent 2 }}
+  {{- end }}
+{{- end }}
+{{- end }}

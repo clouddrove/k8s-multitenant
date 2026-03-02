@@ -1,0 +1,20 @@
+{{- if and .Values.resourceQuota.enabled (gt (len .Values.tenants) 0) }}
+{{- $defaultQuota := .Values.resourceQuota.default }}
+{{- range .Values.tenants }}
+{{- $quota := default $defaultQuota .resourceQuota }}
+{{- if $quota }}
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: {{ $.Release.Name }}-tenant-quota
+  namespace: {{ .name | quote }}
+  labels:
+    {{- include "multitenant.labels" $ | nindent 4 }}
+    multitenant.kubernetes.io/tenant: {{ .name | quote }}
+spec:
+  hard:
+    {{- toYaml $quota | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

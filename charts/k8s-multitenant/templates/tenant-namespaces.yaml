@@ -1,0 +1,25 @@
+{{- if .Values.tenants }}
+{{- range .Values.tenants }}
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ .name | quote }}
+  labels:
+    {{- include "multitenant.labels" $ | nindent 4 }}
+    multitenant.kubernetes.io/tenant: {{ .name | quote }}
+    multitenant.kubernetes.io/type: tenant
+  {{- with .labels }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  {{- $globalAnn := default (dict) $.Values.global.annotations }}
+  {{- $tenantAnn := default (dict) .annotations }}
+  {{- $mergedAnn := merge $globalAnn $tenantAnn }}
+  {{- if $mergedAnn }}
+  annotations:
+    {{- toYaml $mergedAnn | nindent 4 }}
+  {{- end }}
+
+{{- end }}
+{{- end }}

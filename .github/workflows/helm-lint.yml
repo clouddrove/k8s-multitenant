@@ -1,0 +1,113 @@
+name: Helm Lint & Test
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - "charts/**"
+      - "examples/**"
+      - ".github/workflows/helm-lint.yml"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "charts/**"
+      - "examples/**"
+
+jobs:
+  lint:
+    name: Lint Chart
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up chart-testing
+        uses: helm/chart-testing-action@v2.6.1
+
+      - name: Run chart-testing (list-changed)
+        id: list-changed
+        run: |
+          changed=$(ct list-changed --target-branch ${{ github.event.repository.default_branch }})
+          if [[ -n "$changed" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run chart-testing (lint)
+        if: steps.list-changed.outputs.changed == 'true'
+        run: ct lint --target-branch ${{ github.event.repository.default_branch }}
+
+  template-test:
+    name: Template Rendering
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
+      - name: Render basic-tenant example
+        run: |
+          helm template k8s-multitenant charts/k8s-multitenant \
+            -f examples/basic-tenant/values.yaml \
+            --debug
+
+      - name: Render advanced-tenant example
+        run: |
+          helm template k8s-multitenant charts/k8s-multitenant \
+            -f examples/advanced-tenant/values.yaml \
+            --debug
+
+      - name: Render production-tenant example
+        run: |
+          helm template k8s-multitenant charts/k8s-multitenant \
+            -f examples/production-tenant/values.yaml \
+            --debug
+
+      - name: Render eks example
+        run: |
+          helm template k8s-multitenant charts/k8s-multitenant \
+            -f examples/eks/values.yaml \
+            --debug
+
+      - name: Render aks example
+        run: |
+          helm template k8s-multitenant charts/k8s-multitenant \
+            -f examples/aks/values.yaml \
+            --debug
+
+      - name: Render gke example
+        run: |
+          helm template k8s-multitenant charts/k8s-multitenant \
+            -f examples/gke/values.yaml \
+            --debug
+
+  validate-yaml:
+    name: Validate YAML Schema
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.14.0
+
+      - name: Validate chart schema
+        run: |
+          helm lint charts/k8s-multitenant --strict

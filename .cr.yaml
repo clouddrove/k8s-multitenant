@@ -1,0 +1,6 @@
+# chart-releaser configuration
+# https://github.com/helm/chart-releaser
+
+owner: clouddrove
+git-repo: k8s-multitenant
+charts-repo-url: https://clouddrove.github.io/k8s-multitenant

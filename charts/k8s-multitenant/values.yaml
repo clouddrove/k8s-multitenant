@@ -1,0 +1,137 @@
+# Default values for multitenant chart
+
+# -----------------------------------------------------------------------------
+# Global settings
+# -----------------------------------------------------------------------------
+global:
+  labels: {}
+  annotations: {}
+
+# -----------------------------------------------------------------------------
+# Tools namespace
+# -----------------------------------------------------------------------------
+tools:
+  create: true
+  namespace: k8s-tools
+  labels: {}
+  annotations: {}
+
+# -----------------------------------------------------------------------------
+# Tenant namespaces
+# Each tenant entry creates a Namespace, ResourceQuota, LimitRange, Role,
+# RoleBinding, and NetworkPolicy. Per-tenant overrides are supported for
+# resourceQuota, limitRange, rbac.subjects, and networkPolicy.enabled.
+# -----------------------------------------------------------------------------
+tenants: []
+  # - name: team-alpha
+  #   labels:
+  #     environment: production
+  #     cost-center: eng-01
+  #   annotations: {}
+  #
+  #   # Per-tenant resource quota (overrides resourceQuota.default)
+  #   resourceQuota:
+  #     requests.cpu: "4"
+  #     limits.cpu: "8"
+  #     requests.memory: 8Gi
+  #     limits.memory: 16Gi
+  #     pods: "30"
+  #
+  #   # Per-tenant limit range (overrides limitRange.default)
+  #   limitRange:
+  #     type: Container
+  #     default:
+  #       cpu: 500m
+  #       memory: 512Mi
+  #     defaultRequest:
+  #       cpu: 200m
+  #       memory: 256Mi
+  #     max:
+  #       cpu: "2"
+  #       memory: 4Gi
+  #     min:
+  #       cpu: 50m
+  #       memory: 64Mi
+  #
+  #   # Per-tenant RBAC subjects (appended to the default ServiceAccount binding)
+  #   rbac:
+  #     subjects:
+  #       - kind: Group
+  #         name: team-alpha-admins
+  #         apiGroup: rbac.authorization.k8s.io
+  #       - kind: User
+  #         name: alice@example.com
+  #         apiGroup: rbac.authorization.k8s.io
+  #
+  #   # Per-tenant network policy toggle (overrides networkPolicy.enabled)
+  #   networkPolicy:
+  #     enabled: true
+
+# -----------------------------------------------------------------------------
+# RBAC
+# -----------------------------------------------------------------------------
+rbac:
+  create: true
+  # Default ServiceAccount bound in every tenant namespace.
+  serviceAccountName: default
+  defaultRules:
+    - apiGroups: [""]
+      resources: ["pods", "pods/log", "services", "configmaps", "secrets", "persistentvolumeclaims"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    - apiGroups: ["apps"]
+      resources: ["deployments", "replicasets", "statefulsets"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    - apiGroups: ["batch"]
+      resources: ["jobs", "cronjobs"]
+      verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+    - apiGroups: [""]
+      resources: ["events"]
+      verbs: ["get", "list", "watch"]
+
+# -----------------------------------------------------------------------------
+# ResourceQuota (lean defaults — override per tenant via tenants[].resourceQuota)
+# -----------------------------------------------------------------------------
+resourceQuota:
+  enabled: true
+  default:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    persistentvolumeclaims: "5"
+    pods: "20"
+    services: "5"
+    secrets: "20"
+    configmaps: "20"
+
+# -----------------------------------------------------------------------------
+# LimitRange (override per tenant via tenants[].limitRange)
+# -----------------------------------------------------------------------------
+limitRange:
+  enabled: true
+  default:
+    type: Container
+    default:
+      cpu: 300m
+      memory: 256Mi
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+    max:
+      cpu: "1"
+      memory: 2Gi
+    min:
+      cpu: 50m
+      memory: 64Mi
+
+# -----------------------------------------------------------------------------
+# NetworkPolicy
+# enabled        — global default; override per tenant via tenants[].networkPolicy.enabled
+# vpcCidr        — CIDR of your VPC, used to allow ALB/node ingress and internal
+#                  service egress (RDS, ElastiCache, etc.)
+# allowInternetEgress — set true to allow outbound HTTPS/HTTP to the internet
+# -----------------------------------------------------------------------------
+networkPolicy:
+  enabled: true
+  vpcCidr: "10.0.0.0/8"
+  allowInternetEgress: false

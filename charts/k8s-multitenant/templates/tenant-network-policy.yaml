@@ -1,0 +1,79 @@
+{{- if gt (len .Values.tenants) 0 }}
+{{- range .Values.tenants }}
+{{- $netPolEnabled := $.Values.networkPolicy.enabled }}
+{{- if and (hasKey . "networkPolicy") (hasKey .networkPolicy "enabled") }}
+{{- $netPolEnabled = .networkPolicy.enabled }}
+{{- end }}
+{{- if $netPolEnabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ $.Release.Name }}-tenant-isolation
+  namespace: {{ .name | quote }}
+  labels:
+    {{- include "multitenant.labels" $ | nindent 4 }}
+    multitenant.kubernetes.io/tenant: {{ .name | quote }}
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+
+  ingress:
+    # Allow traffic from pods within the same namespace
+    - from:
+        - podSelector: {}
+
+    # Allow traffic from kube-system (DNS, CNI health checks, etc.)
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+
+    # Allow ALB / node traffic from within the VPC
+    - from:
+        - ipBlock:
+            cidr: {{ $.Values.networkPolicy.vpcCidr }}
+
+  egress:
+    # DNS to CoreDNS in kube-system
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+
+    # Internal VPC services (RDS, ElastiCache, MSK, etc.)
+    - to:
+        - ipBlock:
+            cidr: {{ $.Values.networkPolicy.vpcCidr }}
+      ports:
+        - protocol: TCP
+          port: 5432   # PostgreSQL / Aurora
+        - protocol: TCP
+          port: 3306   # MySQL
+        - protocol: TCP
+          port: 6379   # Redis / ElastiCache
+        - protocol: TCP
+          port: 9092   # Kafka / MSK
+
+    {{- if $.Values.networkPolicy.allowInternetEgress }}
+    # Internet egress — enabled via networkPolicy.allowInternetEgress
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+    {{- end }}
+
+{{- end }}
+{{- end }}
+{{- end }}

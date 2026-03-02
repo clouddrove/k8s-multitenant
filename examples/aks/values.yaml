@@ -1,0 +1,97 @@
+# AKS example — Azure Kubernetes Service
+#
+# Prerequisites:
+#   - NetworkPolicy enforcement requires Azure CNI (NOT kubenet).
+#     Enable at cluster creation:
+#       az aks create --network-plugin azure --network-policy azure ...
+#     Or use Cilium: --network-plugin azure --network-plugin-mode overlay --network-policy cilium
+#   - For rbac.subjects using Azure AD Groups, enable AKS-managed Azure AD:
+#       az aks create --enable-aad --aad-admin-group-object-ids <group-object-id>
+#     Then use the AAD group Object ID as the subject name.
+#
+# vpcCidr: set to your Azure VNet address space. Find it with:
+#   az network vnet list --query '[*].{name:name, addressSpace:addressSpace.addressPrefixes}'
+#
+# Usage:
+#   helm upgrade --install tenants k8s-multitenant/k8s-multitenant \
+#     -f examples/aks/values.yaml \
+#     -n platform-system --create-namespace
+
+global:
+  labels:
+    managed-by: platform-team
+    cloud: azure
+
+tools:
+  create: true
+  namespace: k8s-tools
+
+tenants:
+  - name: team-alpha
+    labels:
+      environment: production
+      cost-center: eng-platform
+    rbac:
+      subjects:
+        # Use the Azure AD Group Object ID as the name.
+        # Find it with: az ad group show --group "team-alpha-admins" --query id -o tsv
+        - kind: Group
+          name: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # AAD group Object ID
+          apiGroup: rbac.authorization.k8s.io
+    networkPolicy:
+      enabled: true
+
+  - name: team-beta
+    labels:
+      environment: production
+      cost-center: eng-product
+    rbac:
+      subjects:
+        - kind: Group
+          name: "yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy"  # AAD group Object ID
+          apiGroup: rbac.authorization.k8s.io
+    networkPolicy:
+      enabled: true
+
+rbac:
+  create: true
+  serviceAccountName: default
+
+resourceQuota:
+  enabled: true
+  default:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    pods: "20"
+    services: "5"
+    persistentvolumeclaims: "5"
+    secrets: "50"
+    configmaps: "50"
+
+limitRange:
+  enabled: true
+  default:
+    type: Container
+    default:
+      cpu: 300m
+      memory: 256Mi
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+    max:
+      cpu: "1"
+      memory: 2Gi
+    min:
+      cpu: 50m
+      memory: 64Mi
+
+networkPolicy:
+  enabled: true
+  # Set to your Azure VNet address space. This allows:
+  #   - Azure Load Balancer health probe traffic into pods
+  #   - Egress to Azure Database for PostgreSQL, Azure Cache for Redis, etc.
+  vpcCidr: "10.0.0.0/8"
+  # Keep false unless pods need to call external APIs
+  allowInternetEgress: false

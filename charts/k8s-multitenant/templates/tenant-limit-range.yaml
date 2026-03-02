@@ -1,0 +1,20 @@
+{{- if and .Values.limitRange.enabled (gt (len .Values.tenants) 0) }}
+{{- $defaultLimitRange := .Values.limitRange.default }}
+{{- range .Values.tenants }}
+{{- $lr := default $defaultLimitRange .limitRange }}
+{{- if $lr }}
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: {{ $.Release.Name }}-tenant-limits
+  namespace: {{ .name | quote }}
+  labels:
+    {{- include "multitenant.labels" $ | nindent 4 }}
+    multitenant.kubernetes.io/tenant: {{ .name | quote }}
+spec:
+  limits:
+{{- toYaml (list $lr) | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}

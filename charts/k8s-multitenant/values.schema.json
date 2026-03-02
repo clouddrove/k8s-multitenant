@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "k8s-multitenant values",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "global": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "labels":      { "type": "object" },
+        "annotations": { "type": "object" }
+      }
+    },
+    "tools": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create":      { "type": "boolean" },
+        "namespace":   { "type": "string", "minLength": 1 },
+        "labels":      { "type": "object" },
+        "annotations": { "type": "object" }
+      }
+    },
+    "tenants": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "additionalProperties": false,
+        "properties": {
+          "name":        { "type": "string", "minLength": 1, "pattern": "^[a-z0-9][a-z0-9-]*[a-z0-9]$" },
+          "labels":      { "type": "object" },
+          "annotations": { "type": "object" },
+          "resourceQuota": {
+            "type": "object",
+            "description": "Hard quota spec. Overrides resourceQuota.default for this tenant."
+          },
+          "limitRange": {
+            "type": "object",
+            "description": "LimitRange spec. Overrides limitRange.default for this tenant.",
+            "properties": {
+              "type":           { "type": "string" },
+              "default":        { "type": "object" },
+              "defaultRequest": { "type": "object" },
+              "max":            { "type": "object" },
+              "min":            { "type": "object" }
+            }
+          },
+          "rbac": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "subjects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["kind", "name"],
+                  "properties": {
+                    "kind":      { "type": "string", "enum": ["User", "Group", "ServiceAccount"] },
+                    "name":      { "type": "string", "minLength": 1 },
+                    "apiGroup":  { "type": "string" },
+                    "namespace": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "networkPolicy": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "enabled": { "type": "boolean" }
+            }
+          }
+        }
+      }
+    },
+    "rbac": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "create":             { "type": "boolean" },
+        "serviceAccountName": { "type": "string", "minLength": 1 },
+        "defaultRules": {
+          "type": "array",
+          "items": { "type": "object" }
+        }
+      }
+    },
+    "resourceQuota": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "default": { "type": "object" }
+      }
+    },
+    "limitRange": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "default": {
+          "type": "object",
+          "properties": {
+            "type":           { "type": "string" },
+            "default":        { "type": "object" },
+            "defaultRequest": { "type": "object" },
+            "max":            { "type": "object" },
+            "min":            { "type": "object" }
+          }
+        }
+      }
+    },
+    "networkPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled":             { "type": "boolean" },
+        "vpcCidr":             { "type": "string", "pattern": "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$" },
+        "allowInternetEgress": { "type": "boolean" }
+      }
+    }
+  }
+}

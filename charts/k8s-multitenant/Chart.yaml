@@ -1,0 +1,28 @@
+apiVersion: v2
+name: k8s-multitenant
+description: |
+  Production-ready Helm chart for multi-tenant Kubernetes. Share clusters across
+  tenants with RBAC, resource quotas, automated namespace creation, network
+  isolation, and cost governance — declaratively in a single values.yaml.
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - multitenant
+  - multi-tenant
+  - namespaces
+  - rbac
+  - resource-quota
+  - network-policy
+  - kubernetes
+  - platform-engineering
+  - cost-optimization
+home: https://github.com/clouddrove/k8s-multitenant
+sources:
+  - https://github.com/clouddrove/k8s-multitenant
+maintainers:
+  - name: CloudDrove
+    url: https://github.com/clouddrove
+kubeVersion: ">=1.21.0-0"
+annotations:
+  category: Infrastructure

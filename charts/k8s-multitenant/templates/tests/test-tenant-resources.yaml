@@ -1,0 +1,44 @@
+{{- if gt (len .Values.tenants) 0 }}
+{{- $firstTenant := index .Values.tenants 0 }}
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: {{ .Release.Name }}-test-tenant-resources
+  namespace: {{ $firstTenant.name | quote }}
+  labels:
+    {{- include "multitenant.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  restartPolicy: Never
+  containers:
+    - name: verify
+      image: bitnami/kubectl:latest
+      command:
+        - /bin/sh
+        - -c
+        - |
+          set -e
+          echo "==> Verifying namespace {{ $firstTenant.name }} exists"
+          kubectl get namespace {{ $firstTenant.name | quote }}
+
+          {{- if .Values.resourceQuota.enabled }}
+          echo "==> Verifying ResourceQuota exists in {{ $firstTenant.name }}"
+          kubectl get resourcequota -n {{ $firstTenant.name | quote }}
+          {{- end }}
+
+          {{- if .Values.limitRange.enabled }}
+          echo "==> Verifying LimitRange exists in {{ $firstTenant.name }}"
+          kubectl get limitrange -n {{ $firstTenant.name | quote }}
+          {{- end }}
+
+          {{- if .Values.rbac.create }}
+          echo "==> Verifying Role and RoleBinding exist in {{ $firstTenant.name }}"
+          kubectl get role -n {{ $firstTenant.name | quote }}
+          kubectl get rolebinding -n {{ $firstTenant.name | quote }}
+          {{- end }}
+
+          echo "==> All checks passed"
+{{- end }}

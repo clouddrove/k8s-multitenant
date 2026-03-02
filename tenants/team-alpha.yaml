@@ -1,0 +1,65 @@
+# Tenant: team-alpha
+# Usage:
+#   helm upgrade --install tenants charts/k8s-multitenant \
+#     -n platform-system --create-namespace \
+#     -f tenants/team-alpha.yaml
+
+tools:
+  create: true
+  namespace: k8s-tools
+
+tenants:
+  - name: team-alpha
+    labels:
+      environment: production
+      cost-center: eng-platform
+      tier: standard
+    rbac:
+      subjects:
+        - kind: Group
+          name: team-alpha-admins
+          apiGroup: rbac.authorization.k8s.io
+        - kind: User
+          name: alice@example.com
+          apiGroup: rbac.authorization.k8s.io
+    networkPolicy:
+      enabled: true
+
+rbac:
+  create: true
+  serviceAccountName: default
+
+resourceQuota:
+  enabled: true
+  default:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    pods: "20"
+    services: "5"
+    persistentvolumeclaims: "5"
+    secrets: "50"
+    configmaps: "50"
+
+limitRange:
+  enabled: true
+  default:
+    type: Container
+    default:
+      cpu: 300m
+      memory: 500Mi
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+    max:
+      cpu: "1"
+      memory: 2Gi
+    min:
+      cpu: 50m
+      memory: 64Mi
+
+networkPolicy:
+  enabled: true
+  vpcCidr: "10.0.0.0/8"
+  allowInternetEgress: false

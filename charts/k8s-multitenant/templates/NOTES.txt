@@ -1,0 +1,23 @@
+Multitenant platform has been installed.
+
+{{- if .Values.tools.create }}
+
+Tools namespace: {{ .Values.tools.namespace }}
+  Use this namespace for cluster-wide tools, operators, and controllers.
+{{- end }}
+
+{{- if .Values.tenants }}
+
+Tenant namespaces ({{ len .Values.tenants }}):
+{{- range .Values.tenants }}
+  - {{ .name }}
+{{- end }}
+
+Each tenant has its own namespace. Deploy tenant workloads into the corresponding namespace.
+{{- else }}
+
+No tenant namespaces were created. Add tenants under 'tenants' in values and upgrade.
+{{- end }}
+
+To add a new tenant later:
+  helm upgrade {{ .Release.Name }} . --reuse-values --set 'tenants[{{ len .Values.tenants }}].name=new-tenant'

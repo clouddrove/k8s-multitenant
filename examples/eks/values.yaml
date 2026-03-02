@@ -1,0 +1,102 @@
+# EKS example — Amazon Elastic Kubernetes Service
+#
+# Prerequisites:
+#   - NetworkPolicy enforcement requires one of:
+#       a) Amazon VPC CNI with network policy support (EKS 1.25+, add-on v1.14+)
+#          https://docs.aws.amazon.com/eks/latest/userguide/cni-network-policy.html
+#       b) Calico installed as a network policy engine
+#   - For rbac.subjects using Groups, map IAM roles to Kubernetes groups
+#     in the aws-auth ConfigMap (or use EKS access entries on EKS 1.29+)
+#
+# vpcCidr: set this to your VPC's CIDR block. Find it with:
+#   aws ec2 describe-vpcs --query 'Vpcs[*].CidrBlock'
+#
+# Usage:
+#   helm upgrade --install tenants k8s-multitenant/k8s-multitenant \
+#     -f examples/eks/values.yaml \
+#     -n platform-system --create-namespace
+
+global:
+  labels:
+    managed-by: platform-team
+    cloud: aws
+
+tools:
+  create: true
+  namespace: k8s-tools
+
+tenants:
+  - name: team-alpha
+    labels:
+      environment: production
+      cost-center: eng-platform
+    annotations:
+      # Annotate namespace so IRSA (IAM Roles for Service Accounts) can be scoped
+      eks.amazonaws.com/cluster-name: my-eks-cluster
+    rbac:
+      subjects:
+        # Map an IAM role to a Kubernetes Group via aws-auth ConfigMap:
+        #   mapRoles:
+        #     - rolearn: arn:aws:iam::123456789012:role/team-alpha-role
+        #       username: team-alpha-user
+        #       groups: [team-alpha-admins]
+        - kind: Group
+          name: team-alpha-admins
+          apiGroup: rbac.authorization.k8s.io
+    networkPolicy:
+      enabled: true
+
+  - name: team-beta
+    labels:
+      environment: production
+      cost-center: eng-product
+    rbac:
+      subjects:
+        - kind: Group
+          name: team-beta-admins
+          apiGroup: rbac.authorization.k8s.io
+    networkPolicy:
+      enabled: true
+
+rbac:
+  create: true
+  serviceAccountName: default
+
+resourceQuota:
+  enabled: true
+  default:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    pods: "20"
+    services: "5"
+    persistentvolumeclaims: "5"
+    secrets: "50"
+    configmaps: "50"
+
+limitRange:
+  enabled: true
+  default:
+    type: Container
+    default:
+      cpu: 300m
+      memory: 256Mi
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+    max:
+      cpu: "1"
+      memory: 2Gi
+    min:
+      cpu: 50m
+      memory: 64Mi
+
+networkPolicy:
+  enabled: true
+  # Set to your actual VPC CIDR. This allows:
+  #   - ALB (Application Load Balancer) traffic into pods
+  #   - Egress to RDS, ElastiCache, MSK, and other VPC-internal services
+  vpcCidr: "10.0.0.0/16"
+  # Keep false unless pods need to call external APIs (e.g. Stripe, Twilio)
+  allowInternetEgress: false

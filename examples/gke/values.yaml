@@ -1,0 +1,103 @@
+# GKE example — Google Kubernetes Engine
+#
+# Prerequisites:
+#   - NetworkPolicy enforcement must be enabled at cluster creation time:
+#       gcloud container clusters create ... --enable-network-policy
+#     Or for GKE Standard (not Autopilot), it cannot be enabled post-creation.
+#     GKE Autopilot enforces NetworkPolicy by default — no extra step needed.
+#   - For rbac.subjects using Google Groups, enable Google Groups for RBAC:
+#       gcloud container clusters create ... --security-group="gke-security-groups@yourdomain.com"
+#     Then any Google Group in that parent group can be used as a Subject.
+#
+# vpcCidr: set to your GCP VPC subnet range. Find it with:
+#   gcloud compute networks subnets list --filter="region:us-central1"
+#   GKE uses VPC-native (alias IP) ranges by default.
+#
+# Usage:
+#   helm upgrade --install tenants k8s-multitenant/k8s-multitenant \
+#     -f examples/gke/values.yaml \
+#     -n platform-system --create-namespace
+
+global:
+  labels:
+    managed-by: platform-team
+    cloud: gcp
+
+tools:
+  create: true
+  namespace: k8s-tools
+
+tenants:
+  - name: team-alpha
+    labels:
+      environment: production
+      cost-center: eng-platform
+    annotations:
+      # Annotate namespace for GKE Workload Identity — pods can impersonate
+      # a Google Service Account without key files.
+      # iam.gke.io/gcp-service-account: team-alpha@my-project.iam.gserviceaccount.com
+    rbac:
+      subjects:
+        # Use a Google Group email address (must be under the security-group parent).
+        # The group is granted the tenant Role via this binding.
+        - kind: Group
+          name: team-alpha-admins@yourdomain.com
+          apiGroup: rbac.authorization.k8s.io
+    networkPolicy:
+      enabled: true
+
+  - name: team-beta
+    labels:
+      environment: production
+      cost-center: eng-product
+    rbac:
+      subjects:
+        - kind: Group
+          name: team-beta-admins@yourdomain.com
+          apiGroup: rbac.authorization.k8s.io
+    networkPolicy:
+      enabled: true
+
+rbac:
+  create: true
+  serviceAccountName: default
+
+resourceQuota:
+  enabled: true
+  default:
+    requests.cpu: "2"
+    requests.memory: 4Gi
+    limits.cpu: "4"
+    limits.memory: 8Gi
+    pods: "20"
+    services: "5"
+    persistentvolumeclaims: "5"
+    secrets: "50"
+    configmaps: "50"
+
+limitRange:
+  enabled: true
+  default:
+    type: Container
+    default:
+      cpu: 300m
+      memory: 256Mi
+    defaultRequest:
+      cpu: 100m
+      memory: 128Mi
+    max:
+      cpu: "1"
+      memory: 2Gi
+    min:
+      cpu: 50m
+      memory: 64Mi
+
+networkPolicy:
+  enabled: true
+  # Set to your GKE node/pod IP range (VPC-native alias IP range). Allows:
+  #   - GKE Load Balancer health check traffic into pods (130.211.0.0/22 and 35.191.0.0/16
+  #     are Google's health check ranges — add them separately if needed)
+  #   - Egress to Cloud SQL, Memorystore (Redis), Pub/Sub private endpoints, etc.
+  vpcCidr: "10.0.0.0/8"
+  # Keep false unless pods need external internet access
+  allowInternetEgress: false

@@ -1,0 +1,86 @@
+# Advanced example — multiple teams sharing the same resource profile
+# Usage:
+#   helm install my-tenants k8s-multitenant/k8s-multitenant \
+#     -f examples/advanced-tenant/values.yaml \
+#     -n platform-system --create-namespace
+
+global:
+  labels:
+    managed-by: platform-team
+
+tools:
+  create: true
+  namespace: k8s-tools
+
+tenants:
+  - name: frontend
+    labels:
+      environment: production
+      cost-center: "product-frontend"
+    rbac:
+      subjects:
+        - kind: Group
+          name: frontend-engineers
+          apiGroup: rbac.authorization.k8s.io
+
+  - name: backend
+    labels:
+      environment: production
+      cost-center: "product-backend"
+    rbac:
+      subjects:
+        - kind: Group
+          name: backend-engineers
+          apiGroup: rbac.authorization.k8s.io
+
+  - name: data-platform
+    labels:
+      environment: production
+      cost-center: "data-infra"
+    # data team needs outbound internet for external API calls
+    networkPolicy:
+      enabled: true
+    rbac:
+      subjects:
+        - kind: Group
+          name: data-engineers
+          apiGroup: rbac.authorization.k8s.io
+
+rbac:
+  create: true
+  serviceAccountName: default
+
+resourceQuota:
+  enabled: true
+  default:
+    requests.cpu: "4"
+    requests.memory: 8Gi
+    limits.cpu: "8"
+    limits.memory: 16Gi
+    pods: "30"
+    services: "10"
+    persistentvolumeclaims: "10"
+    secrets: "50"
+    configmaps: "50"
+
+limitRange:
+  enabled: true
+  default:
+    type: Container
+    default:
+      cpu: 500m
+      memory: 512Mi
+    defaultRequest:
+      cpu: 200m
+      memory: 256Mi
+    max:
+      cpu: "2"
+      memory: 4Gi
+    min:
+      cpu: 50m
+      memory: 64Mi
+
+networkPolicy:
+  enabled: true
+  vpcCidr: "10.0.0.0/8"
+  allowInternetEgress: false
