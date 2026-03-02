@@ -32,10 +32,9 @@ tenants:
     labels:
       environment: production
       cost-center: eng-platform
-    annotations:
-      # Annotate namespace for GKE Workload Identity — pods can impersonate
-      # a Google Service Account without key files.
-      # iam.gke.io/gcp-service-account: team-alpha@my-project.iam.gserviceaccount.com
+    # To use GKE Workload Identity, add an annotation to the namespace:
+    #   annotations:
+    #     iam.gke.io/gcp-service-account: team-alpha@my-project.iam.gserviceaccount.com
     rbac:
       subjects:
         # Use a Google Group email address (must be under the security-group parent).
