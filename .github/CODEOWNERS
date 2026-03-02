@@ -1,0 +1,9 @@
+# Global owner — all files require review from CloudDrove
+* @clouddrove
+
+# Chart
+charts/ @clouddrove
+
+# Examples
+examples/ @clouddrove
+tenants/ @clouddrove
