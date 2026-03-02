@@ -347,5 +347,5 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 <p align="center">
-  Made with ❤️ for platform engineering teams
+  Made with ❤️ by <a href="https://github.com/clouddrove">CloudDrove</a>
 </p>
