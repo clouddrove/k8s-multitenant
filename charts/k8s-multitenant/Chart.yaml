@@ -36,7 +36,7 @@ annotations:
     - name: Documentation
       url: https://docs.clouddrove.com/open-source-tools/k8s-multitenant
     - name: Chart Repository
-      url: https://clouddrove.github.io/k8s-multitenant
+      url: https://ghcr.io/clouddrove/k8s-multitenant
   artifacthub.io/maintainers: |
     - name: CloudDrove
       email: hello@clouddrove.com

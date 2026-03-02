@@ -4,35 +4,36 @@ on:
   push:
     branches:
       - main
-      - master
+    paths:
+      - "charts/**"
 
 jobs:
   release:
-    name: Release Chart to GitHub Pages
+    name: Push Chart to GHCR
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-
-      - name: Configure Git
-        run: |
-          git config user.name "$GITHUB_ACTOR"
-          git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+        uses: actions/checkout@v4
 
       - name: Set up Helm
         uses: azure/setup-helm@v4
         with:
           version: v3.14.0
 
-      - name: Run chart-releaser
-        uses: helm/chart-releaser-action@v1.7.0
-        env:
-          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-        with:
-          charts_dir: charts
-          config: .cr.yaml
+      - name: Log in to GHCR
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io \
+            --username ${{ github.actor }} \
+            --password-stdin
+
+      - name: Package chart
+        run: helm package charts/k8s-multitenant --destination .
+
+      - name: Push chart to GHCR
+        run: |
+          CHART_VERSION=$(grep '^version:' charts/k8s-multitenant/Chart.yaml | awk '{print $2}')
+          helm push k8s-multitenant-${CHART_VERSION}.tgz oci://ghcr.io/clouddrove

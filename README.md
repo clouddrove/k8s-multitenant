@@ -84,17 +84,13 @@ Manually managing dozens (or hundreds) of tenant namespaces is error-prone and d
 
 ## Installation
 
-### Add the Helm repository
-
-```bash
-helm repo add k8s-multitenant https://clouddrove.github.io/k8s-multitenant
-helm repo update
-```
+The chart is distributed as an OCI artifact on the GitHub Container Registry. Helm 3.8+ supports OCI natively — no `helm repo add` required.
 
 ### Install with defaults
 
 ```bash
-helm install my-tenants k8s-multitenant/k8s-multitenant \
+helm install my-tenants oci://ghcr.io/clouddrove/k8s-multitenant \
+  --version 1.0.0 \
   --namespace platform-system \
   --create-namespace
 ```
@@ -102,7 +98,8 @@ helm install my-tenants k8s-multitenant/k8s-multitenant \
 ### Install with a custom values file
 
 ```bash
-helm install my-tenants k8s-multitenant/k8s-multitenant \
+helm install my-tenants oci://ghcr.io/clouddrove/k8s-multitenant \
+  --version 1.0.0 \
   --namespace platform-system \
   --create-namespace \
   -f my-tenants-values.yaml
@@ -111,8 +108,15 @@ helm install my-tenants k8s-multitenant/k8s-multitenant \
 ### Upgrade
 
 ```bash
-helm upgrade my-tenants k8s-multitenant/k8s-multitenant \
+helm upgrade my-tenants oci://ghcr.io/clouddrove/k8s-multitenant \
+  --version 1.0.0 \
   -f my-tenants-values.yaml
+```
+
+### Pull default values
+
+```bash
+helm show values oci://ghcr.io/clouddrove/k8s-multitenant --version 1.0.0
 ```
 
 ---
@@ -251,7 +255,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: https://clouddrove.github.io/k8s-multitenant
+    repoURL: ghcr.io/clouddrove
     chart: k8s-multitenant
     targetRevision: 1.0.0
     helm:
@@ -276,7 +280,8 @@ metadata:
   namespace: flux-system
 spec:
   interval: 1h
-  url: https://clouddrove.github.io/k8s-multitenant
+  type: oci
+  url: oci://ghcr.io/clouddrove
 ---
 apiVersion: helm.toolkit.fluxcd.io/v2beta1
 kind: HelmRelease
