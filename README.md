@@ -164,7 +164,10 @@ networkPolicy:
 Apply it:
 
 ```bash
-helm install tenants k8s-multitenant/k8s-multitenant -f values.yaml -n platform-system --create-namespace
+helm install tenants oci://ghcr.io/clouddrove/k8s-multitenant \
+  --version 1.0.0 \
+  -f values.yaml \
+  -n platform-system --create-namespace
 ```
 
 ---
@@ -239,6 +242,9 @@ See the [`examples/`](examples/) directory for ready-to-use configurations:
 | [`basic-tenant/`](examples/basic-tenant/) | Single tenant with default settings |
 | [`advanced-tenant/`](examples/advanced-tenant/) | Multi-team setup with custom quotas and network policies |
 | [`production-tenant/`](examples/production-tenant/) | Production-grade config with strict isolation and cost labels |
+| [`eks/`](examples/eks/) | EKS-specific — IAM roles via aws-auth groups, IRSA annotations |
+| [`aks/`](examples/aks/) | AKS-specific — AAD Group Object IDs as RBAC subjects |
+| [`gke/`](examples/gke/) | GKE-specific — Google Groups, Workload Identity annotations |
 
 ---
 
