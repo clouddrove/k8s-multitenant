@@ -61,6 +61,10 @@ spec:
           port: 6379   # Redis / ElastiCache
         - protocol: TCP
           port: 9092   # Kafka / MSK
+        - protocol: TCP
+          port: 9200   # elasticsearch
+        - protocol: TCP
+          port: 5601   # kibana
 
     {{- if $.Values.networkPolicy.allowInternetEgress }}
     # Internet egress — enabled via networkPolicy.allowInternetEgress

@@ -73,5 +73,5 @@ limitRange:
 
 networkPolicy:
   enabled: true
-  vpcCidr: "10.0.0.0/8"
-  allowInternetEgress: false   # strict: no outbound internet for PCI workloads
+  vpcCidr: "10.0.0.0/8" # Adjust this CIDR to match your cluster's VPC CIDR
+  allowInternetEgress: true   # strict: no outbound internet for PCI workloads
