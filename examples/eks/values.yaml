@@ -1,4 +1,4 @@
-# EKS example — Amazon Elastic Kubernetes Service
+# EKS example — Amazon Elastic Kubernetes Service 
 #
 # Prerequisites:
 #   - NetworkPolicy enforcement requires one of:
