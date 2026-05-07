@@ -1,4 +1,4 @@
-# Production-grade example — strict isolation, cost-allocation labels, higher quotas 
+# Production-grade example — strict isolation, cost-allocation labels, higher quotas
 # Usage:
 #   helm install my-tenants k8s-multitenant/k8s-multitenant \
 #     -f examples/production-tenant/values.yaml \
