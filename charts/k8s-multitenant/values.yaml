@@ -133,5 +133,5 @@ limitRange:
 # -----------------------------------------------------------------------------
 networkPolicy:
   enabled: true
-  vpcCidr: "10.0.0.0/8" # Adjust this CIDR to match your cluster's VPC CIDR
+  vpcCidr: "10.0.0.0/8"  # Adjust this CIDR to match your cluster's VPC CIDR
   allowInternetEgress: true
