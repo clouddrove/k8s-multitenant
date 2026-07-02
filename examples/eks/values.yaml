@@ -1,4 +1,4 @@
-# EKS example — Amazon Elastic Kubernetes Service
+# EKS example — Amazon Elastic Kubernetes Service 
 #
 # Prerequisites:
 #   - NetworkPolicy enforcement requires one of:
@@ -65,10 +65,10 @@ rbac:
 resourceQuota:
   enabled: true
   default:
-    requests.cpu: "2"
-    requests.memory: 4Gi
-    limits.cpu: "4"
-    limits.memory: 8Gi
+    requests.cpu: "1"
+    requests.memory: 2Gi
+    limits.cpu: "3"
+    limits.memory: 4Gi
     pods: "20"
     services: "5"
     persistentvolumeclaims: "5"
@@ -99,4 +99,4 @@ networkPolicy:
   #   - Egress to RDS, ElastiCache, MSK, and other VPC-internal services
   vpcCidr: "10.0.0.0/16"
   # Keep false unless pods need to call external APIs (e.g. Stripe, Twilio)
-  allowInternetEgress: false
+  allowInternetEgress: true

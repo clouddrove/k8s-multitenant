@@ -5,7 +5,7 @@ description: |
   tenants with RBAC, resource quotas, automated namespace creation, network
   isolation, and cost governance — declaratively in a single values.yaml.
 type: application
-version: 1.0.0
+version: 1.0.1
 appVersion: "1.0.0"
 keywords:
   - multitenant

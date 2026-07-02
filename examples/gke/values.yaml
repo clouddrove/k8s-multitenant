@@ -64,10 +64,10 @@ rbac:
 resourceQuota:
   enabled: true
   default:
-    requests.cpu: "2"
-    requests.memory: 4Gi
-    limits.cpu: "4"
-    limits.memory: 8Gi
+    requests.cpu: "1"
+    requests.memory: 2Gi
+    limits.cpu: "3"
+    limits.memory: 4Gi
     pods: "20"
     services: "5"
     persistentvolumeclaims: "5"
@@ -97,6 +97,6 @@ networkPolicy:
   #   - GKE Load Balancer health check traffic into pods (130.211.0.0/22 and 35.191.0.0/16
   #     are Google's health check ranges — add them separately if needed)
   #   - Egress to Cloud SQL, Memorystore (Redis), Pub/Sub private endpoints, etc.
-  vpcCidr: "10.0.0.0/8"
+  vpcCidr: "10.0.0.0/8" # Adjust this CIDR to match your cluster's VPC CIDR
   # Keep false unless pods need external internet access
-  allowInternetEgress: false
+  allowInternetEgress: true
